@@ -1,7 +1,7 @@
 --[[
-	Neon Ranger - Roblox Studio character builder
+	Ai Harbinger - Roblox Studio character builder
 	=============================================
-	Dresses a rig with the Neon Ranger Shirt / Pants / Face and builds simple
+	Dresses a rig with the Ai Harbinger Shirt / Pants / Face and builds simple
 	part-based stand-ins for the 3D accessories (hair, cat ears, Robin Hood cap,
 	feather, halo, bow). Works on R6 and R15 block rigs.
 
@@ -16,9 +16,9 @@
 	Leave an ID at 0 to skip that item.
 ]]
 
-local SHIRT_IMAGE_ID = 0 -- NeonRanger_Shirt_585x559.png
-local PANTS_IMAGE_ID = 0 -- NeonRanger_Pants_585x559.png
-local FACE_IMAGE_ID = 0 -- NeonRanger_Face_512.png
+local SHIRT_IMAGE_ID = 0 -- AiHarbinger_Shirt_585x559.png
+local PANTS_IMAGE_ID = 0 -- AiHarbinger_Pants_585x559.png
+local FACE_IMAGE_ID = 0 -- AiHarbinger_Face_512.png
 
 local SKIN = Color3.fromRGB(244, 226, 238)
 local HAIR = Color3.fromRGB(34, 56, 178)
@@ -47,7 +47,7 @@ end
 
 -- Clothing -------------------------------------------------------------------
 for _, child in ipairs(rig:GetChildren()) do
-	if child:IsA("Shirt") or child:IsA("Pants") or child:IsA("ShirtGraphic") or child.Name == "NeonRangerAccessories" then
+	if child:IsA("Shirt") or child:IsA("Pants") or child:IsA("ShirtGraphic") or child.Name == "AiHarbingerAccessories" then
 		child:Destroy()
 	end
 end
@@ -82,7 +82,7 @@ end
 
 -- Accessory helpers ----------------------------------------------------------
 local model = Instance.new("Model")
-model.Name = "NeonRangerAccessories"
+model.Name = "AiHarbingerAccessories"
 model.Parent = rig
 
 local function make(className, name, size, cframe, color, material, weldTo)
@@ -189,4 +189,4 @@ if rightHand then
 	end
 end
 
-print("Neon Ranger built on " .. rig.Name)
+print("Ai Harbinger built on " .. rig.Name)

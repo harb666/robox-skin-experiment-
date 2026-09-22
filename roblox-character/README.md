@@ -1,4 +1,4 @@
-# Neon Ranger: Roblox character from the reference art
+# Ai Harbinger: Roblox character from the reference art
 
 A blue-haired cat-girl archer in a neon "Robin Hood" style, adapted to Roblox's classic blocky style.
 
@@ -6,15 +6,15 @@ A blue-haired cat-girl archer in a neon "Robin Hood" style, adapted to Roblox's 
 
 | File | What it is | Where it goes |
 |---|---|---|
-| `upload/NeonRanger_Shirt_585x559.png` | **Classic Shirt template** (torso + arms) | Upload as a *Shirt* |
-| `upload/NeonRanger_Pants_585x559.png` | **Classic Pants template** (legs + matching torso) | Upload as *Pants* |
-| `upload/NeonRanger_Face_512.png` | Face decal (transparent PNG) | Roblox Studio only (see below) |
-| `preview/NeonRanger_Front.png` | Front view | Reference |
-| `preview/NeonRanger_Back.png` | Back view | Reference |
-| `preview/NeonRanger_Character_Sheet.png` | Front + back + templates + palette + accessory list on one page | Reference |
-| `sandbox/index.html` | Interactive 3D preview (Three.js) of the Shirt/Pants/Face on an R6 block rig. Open it at https://claude.ai/artifact/N6k6XfePEVUHh1JzG8jBPw | Phone browser |
-| `studio/BuildNeonRanger.lua` | One-paste Studio script that dresses a rig and builds the hat, ears, hair, halo and bow from parts | Roblox Studio (Mac/PC) |
-| `NeonRanger_Roblox_Assets.zip` | Everything above in one download | Save to the Files app |
+| `upload/AiHarbinger_Shirt_585x559.png` | **Classic Shirt template** (torso + arms) | Upload as a *Shirt* |
+| `upload/AiHarbinger_Pants_585x559.png` | **Classic Pants template** (legs + matching torso) | Upload as *Pants* |
+| `upload/AiHarbinger_Face_512.png` | Face decal (transparent PNG) | Roblox Studio only (see below) |
+| `preview/AiHarbinger_Front.png` | Front view | Reference |
+| `preview/AiHarbinger_Back.png` | Back view | Reference |
+| `preview/AiHarbinger_Character_Sheet.png` | Front + back + templates + palette + accessory list on one page | Reference |
+| `sandbox/index.html` | Interactive 3D preview (Three.js): anime-proportioned R15-style body wearing the Shirt/Pants/Face, with 3D hair, cat ears, cap, halo, cloak, quiver and bow. Open it at https://claude.ai/artifact/N6k6XfePEVUHh1JzG8jBPw | Phone browser |
+| `studio/BuildAiHarbinger.lua` | One-paste Studio script that dresses a rig and builds the hat, ears, hair, halo and bow from parts | Roblox Studio (Mac/PC) |
+| `AiHarbinger_Roblox_Assets.zip` | Everything above in one download | Save to the Files app |
 | `source/generate.py` | Regenerates all the images | — |
 
 Both templates use the standard 585×559 Roblox layout, with every panel in its official position. Transparent pixels fall outside the panels.
@@ -40,9 +40,9 @@ Both templates use the standard 585×559 Roblox layout, with every panel in its 
 2. Open **Safari** → go to **create.roblox.com** → sign in.
    - If a page says it needs a computer, tap **aA** in the address bar → **Request Desktop Website**.
 3. Go to **Creations** → **Avatar Items** → **Upload Asset**. (Roblox sometimes renames these menus. Look for "Avatar Items" or "Upload".)
-4. Choose **Shirt** → **Choose File** → *Browse* → pick `NeonRanger_Shirt_585x559.png` → name it *Neon Ranger Shirt* → upload.
+4. Choose **Shirt** → **Choose File** → *Browse* → pick `AiHarbinger_Shirt_585x559.png` → name it *Ai Harbinger Shirt* → upload.
    Classic clothing has a small **Robux upload fee** (Roblox has charged 10 Robux). The upload screen shows the current price before you pay.
-5. Repeat with **Pants** → `NeonRanger_Pants_585x559.png`.
+5. Repeat with **Pants** → `AiHarbinger_Pants_585x559.png`.
 6. Wait for moderation to approve the items. This is usually minutes, sometimes hours.
 7. In the **Roblox app** → **Avatar** → **Clothing** → **Shirts / Pants**, wear both.
 8. Finish the look in the Avatar editor:
@@ -53,12 +53,12 @@ Both templates use the standard 585×559 Roblox layout, with every panel in its 
 
 ## Part 2: What can't be finished on an iPhone
 
-- **Custom face on your avatar:** Roblox doesn't allow uploading classic face images as avatar items. Faces are now 3D heads made in Blender and sold through the UGC program. You can still use `NeonRanger_Face_512.png` on characters **inside your own game** in Studio.
+- **Custom face on your avatar:** Roblox doesn't allow uploading classic face images as avatar items. Faces are now 3D heads made in Blender and sold through the UGC program. You can still use `AiHarbinger_Face_512.png` on characters **inside your own game** in Studio.
 - **Hair, cat ears, hat, halo, bow as your own avatar items:** these are 3D accessories. They need a 3D model (Blender), fitting in **Roblox Studio on a Mac or PC**, and UGC upload access. The character sheet gives the design, colours and hex codes so a 3D artist, or you later, can build them.
 - **The final step in Roblox Studio (for an in-game character or NPC):**
   1. Studio → **Avatar** tab → **Rig Builder** → *Block Rig*.
   2. Import the three PNGs (**Asset Manager** → *Import*). Right-click each one → *Copy Asset ID*.
-  3. Paste those IDs into the top of `studio/BuildNeonRanger.lua`.
+  3. Paste those IDs into the top of `studio/BuildAiHarbinger.lua`.
   4. Select the rig, paste the whole script into **View → Command Bar**, press Enter.
      This adds the shirt, pants, face and skin colour, plus part-built versions of the hair, cat ears, Robin Hood cap, feather, glowing halo and neon bow.
 

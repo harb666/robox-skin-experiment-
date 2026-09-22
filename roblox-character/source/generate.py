@@ -1,4 +1,4 @@
-"""Generates the Neon Ranger Roblox character assets.
+"""Generates the Ai Harbinger Roblox character assets.
 
 Outputs (relative to roblox-character/):
   upload/  Shirt + Pants classic clothing templates (585x559) and face decal
@@ -510,8 +510,8 @@ def eye(c, cx, cy, flip, k=1.3):
     c.ell(*P(16, 30), 6 * k, 6 * k, fill=(255, 255, 255))
     star(c, *P(12, 2), 8 * k, (255, 225, 255), inner=0.3)
     # upper lash line with outer flick
-    lash = [P(-54, -14), P(-30, -48), P(10, -56), P(44, -44), P(66, -38), P(54, -30), P(40, -34),
-            P(8, -44), P(-28, -38), P(-50, -6)]
+    lash = [P(-50, -28), P(-22, -56), P(16, -62), P(50, -50), P(72, -56), P(58, -38), P(42, -40),
+            P(12, -48), P(-20, -46), P(-46, -22)]
     c.poly(lash, fill=(22, 12, 40))
     c.line(bez(P(-40, 54), P(0, 70), P(38, 58)), (60, 30, 90), 3 * k)
 
@@ -522,8 +522,8 @@ def build_face():
     blush.ell(118, 372, 46, 22, fill=(255, 120, 200, 110))
     blush.ell(394, 372, 46, 22, fill=(255, 120, 200, 110))
     c.comp(blush, blur=8)
-    eye(c, 156, 236, flip=False)
-    eye(c, 356, 236, flip=True)
+    eye(c, 156, 236, flip=True)
+    eye(c, 356, 236, flip=False)
     # forehead gem
     c.poly([(256, 146), (272, 168), (256, 194), (240, 168)], fill=GOLD_D)
     c.glow(lambda g: g.poly([(256, 153), (267, 168), (256, 187), (245, 168)], fill=(170, 90, 255)), 4)
@@ -589,7 +589,7 @@ def background(c, title):
     c.glow(lambda gg: gg.ell(W / 2, 1452, 260, 26, outline=NEON_M, width=3), 6)
     font = ImageFont.truetype(FONT, 46 * c.s)
     small = ImageFont.truetype(FONT, 24 * c.s)
-    c.d.text((W / 2 * c.s, 60 * c.s), "NEON RANGER", font=font, fill=(255, 220, 250), anchor="mm")
+    c.d.text((W / 2 * c.s, 60 * c.s), "AI HARBINGER", font=font, fill=(255, 220, 250), anchor="mm")
     c.d.text((W / 2 * c.s, 110 * c.s), title, font=small, fill=NEON_M, anchor="mm")
 
 
@@ -755,7 +755,7 @@ def build_sheet(front, back, shirt, pants, face):
     big = ImageFont.truetype(FONT, 54)
     mid = ImageFont.truetype(FONT, 28)
     sm = ImageFont.truetype(FONT, 20)
-    c.d.text((W / 2, 70), "NEON RANGER  -  Roblox Character Sheet", font=big, fill=(255, 220, 250), anchor="mm")
+    c.d.text((W / 2, 70), "AI HARBINGER  -  Roblox Character Sheet", font=big, fill=(255, 220, 250), anchor="mm")
     c.d.text((W / 2, 125), "Classic Shirt + Pants + Face decal  |  accessories listed below", font=sm,
              fill=NEON_M, anchor="mm")
     fw = 760
@@ -801,14 +801,14 @@ def main():
     random.seed(11)
     pants = build_pants(tf)
     face = build_face()
-    shirt.save(os.path.join(UPLOAD, "NeonRanger_Shirt_585x559.png"))
-    pants.save(os.path.join(UPLOAD, "NeonRanger_Pants_585x559.png"))
-    face.save(os.path.join(UPLOAD, "NeonRanger_Face_512.png"))
+    shirt.save(os.path.join(UPLOAD, "AiHarbinger_Shirt_585x559.png"))
+    pants.save(os.path.join(UPLOAD, "AiHarbinger_Pants_585x559.png"))
+    face.save(os.path.join(UPLOAD, "AiHarbinger_Face_512.png"))
     front = render(shirt, pants, face, back=False)
     back = render(shirt, pants, face, back=True)
-    front.convert("RGB").save(os.path.join(PREVIEW, "NeonRanger_Front.png"))
-    back.convert("RGB").save(os.path.join(PREVIEW, "NeonRanger_Back.png"))
-    build_sheet(front, back, shirt, pants, face).save(os.path.join(PREVIEW, "NeonRanger_Character_Sheet.png"))
+    front.convert("RGB").save(os.path.join(PREVIEW, "AiHarbinger_Front.png"))
+    back.convert("RGB").save(os.path.join(PREVIEW, "AiHarbinger_Back.png"))
+    build_sheet(front, back, shirt, pants, face).save(os.path.join(PREVIEW, "AiHarbinger_Character_Sheet.png"))
     print("done")
 
 

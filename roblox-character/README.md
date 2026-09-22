@@ -12,6 +12,7 @@ A blue-haired cat-girl archer in a neon "Robin Hood" style, adapted to Roblox's 
 | `preview/NeonRanger_Front.png` | Front view | Reference |
 | `preview/NeonRanger_Back.png` | Back view | Reference |
 | `preview/NeonRanger_Character_Sheet.png` | Front + back + templates + palette + accessory list on one page | Reference |
+| `sandbox/index.html` | Interactive 3D preview (Three.js) of the Shirt/Pants/Face on an R6 block rig. Open it at https://claude.ai/artifact/N6k6XfePEVUHh1JzG8jBPw | Phone browser |
 | `studio/BuildNeonRanger.lua` | One-paste Studio script that dresses a rig and builds the hat, ears, hair, halo and bow from parts | Roblox Studio (Mac/PC) |
 | `NeonRanger_Roblox_Assets.zip` | Everything above in one download | Save to the Files app |
 | `source/generate.py` | Regenerates all the images | — |

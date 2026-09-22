@@ -1,0 +1,528 @@
+<title>Neon Ranger Sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Nunito+Sans:opsz,wght@6..12,600;6..12,800&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --ground: #0b0714;
+    --panel: rgba(18, 11, 30, 0.78);
+    --panel-edge: rgba(255, 64, 226, 0.28);
+    --ink: #f6e9fa;
+    --muted: #b7a6c9;
+    --magenta: #ff40e2;
+    --green: #46ffaa;
+    --chip: rgba(255, 255, 255, 0.06);
+    --chip-on: rgba(255, 64, 226, 0.22);
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 600 14px/1.35 "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #stage { position: fixed; inset: 0; touch-action: none; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+
+  .top {
+    position: fixed; left: 0; right: 0; top: 0;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 0;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    pointer-events: none;
+  }
+  .brand {
+    background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 14px;
+    padding: 10px 14px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    max-width: min(78vw, 360px);
+  }
+  .brand h1 {
+    margin: 0; font: 400 20px/1.1 "Russo One", "Arial Black", system-ui, sans-serif;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    text-shadow: 0 0 14px rgba(255, 64, 226, 0.55);
+  }
+  .brand p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+  .rig {
+    font: 800 11px/1 "Nunito Sans", system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--green); background: var(--panel); border: 1px solid rgba(70, 255, 170, 0.3);
+    padding: 8px 10px; border-radius: 999px; white-space: nowrap;
+  }
+
+  .dock {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    pointer-events: none;
+  }
+  .hint { color: var(--muted); font-size: 12px; text-shadow: 0 1px 6px #000; }
+  .controls {
+    pointer-events: auto;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+    background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 18px;
+    padding: 8px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    max-width: 560px;
+  }
+  .group { display: flex; gap: 6px; }
+  .group + .group { padding-left: 6px; border-left: 1px solid rgba(255, 255, 255, 0.1); }
+  button {
+    font: 800 13px/1 "Nunito Sans", system-ui, sans-serif; color: var(--ink);
+    background: var(--chip); border: 1px solid transparent; border-radius: 12px;
+    min-height: 40px; padding: 0 13px; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  button:hover { background: rgba(255, 255, 255, 0.11); }
+  button[aria-pressed="true"] { background: var(--chip-on); border-color: var(--magenta); color: #fff; }
+  button:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+  @media (max-width: 460px) {
+    .group + .group { border-left: 0; padding-left: 0; }
+    button { padding: 0 11px; }
+  }
+
+  #status {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    font: 400 16px "Russo One", system-ui, sans-serif; letter-spacing: 0.08em; color: var(--muted);
+    pointer-events: none;
+  }
+  #status[hidden] { display: none; }
+</style>
+
+<div id="stage" aria-label="3D preview of the Neon Ranger Roblox character"></div>
+<div id="status">LOADING RIG…</div>
+
+<header class="top">
+  <div class="brand">
+    <h1>Neon Ranger</h1>
+    <p>Your Shirt + Pants + Face on a Roblox block rig</p>
+  </div>
+  <span class="rig">R6 · 585×559</span>
+</header>
+
+<footer class="dock">
+  <span class="hint" id="hint">Drag to orbit · pinch to zoom</span>
+  <div class="controls" role="toolbar" aria-label="Preview controls">
+    <div class="group">
+      <button id="btnFront" type="button">Front</button>
+      <button id="btnBack" type="button">Back</button>
+      <button id="btnSpin" type="button" aria-pressed="true">Spin</button>
+    </div>
+    <div class="group">
+      <button id="btnWalk" type="button" aria-pressed="false">Walk</button>
+      <button id="btnExtras" type="button" aria-pressed="true" title="Hide to see only what the uploaded Shirt/Pants give you">3D extras</button>
+      <button id="btnNeon" type="button" aria-pressed="false">Neon</button>
+    </div>
+  </div>
+</footer>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Roblox classic clothing template regions (x, y, w, h) on the 585x559 sheet.
+const TORSO = { F: [231, 74, 128, 128], B: [427, 74, 128, 128], R: [165, 74, 64, 128], L: [361, 74, 64, 128], U: [231, 8, 128, 64], D: [231, 204, 128, 64] };
+const LIMB_R = { L: [19, 355, 64, 128], B: [85, 355, 64, 128], R: [151, 355, 64, 128], F: [217, 355, 64, 128], U: [217, 289, 64, 64], D: [217, 485, 64, 64] };
+const LIMB_L = { F: [308, 355, 64, 128], L: [374, 355, 64, 128], B: [440, 355, 64, 128], R: [506, 355, 64, 128], U: [308, 289, 64, 64], D: [308, 485, 64, 64] };
+
+const C = {
+  skin: 0xf4e2ee, hair: 0x2238b2, hairDark: 0x10186a, earIn: 0xf27cde, cloak: 0x1e4a3a, cloakLight: 0x3a7456,
+  gold: 0xd6ac52, feather: 0xde28a2, bow: 0x262032, leather: 0x5c3828, leaf: 0x4c9460,
+};
+
+// ---------------------------------------------------------------- renderer
+const stage = document.getElementById("stage");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 200);
+camera.position.set(0, 3.2, 15);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 2.6, 0);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 5;
+controls.maxDistance = 24;
+controls.maxPolarAngle = Math.PI * 0.53;
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.3, 0.15, 1.0);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// ---------------------------------------------------------------- environment
+function canvasTex(w, h, draw) {
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  draw(cv.getContext("2d"), w, h);
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const skyDay = canvasTex(4, 256, (g, w, h) => {
+  const gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, "#5c9fe0"); gr.addColorStop(0.55, "#a9d0f2"); gr.addColorStop(1, "#dbeaf6");
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+});
+const skyNeon = canvasTex(4, 256, (g, w, h) => {
+  const gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, "#07040d"); gr.addColorStop(0.6, "#1a0822"); gr.addColorStop(1, "#2a0a30");
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+});
+function gridTex(base, line, glow) {
+  const t = canvasTex(256, 256, (g, w, h) => {
+    g.fillStyle = base; g.fillRect(0, 0, w, h);
+    if (glow) { g.shadowColor = line; g.shadowBlur = 10; }
+    g.strokeStyle = line; g.lineWidth = 3;
+    g.strokeRect(1.5, 1.5, w - 3, h - 3);
+  });
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(24, 24);
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+const floorDay = gridTex("#6b6e74", "#7d8087", false);
+const floorNeon = gridTex("#0d0714", "#b0209c", true);
+const floorMat = new THREE.MeshStandardMaterial({ map: floorDay, roughness: 0.95 });
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(96, 96), floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// a few classic bricks so it reads as a sandbox
+const props = new THREE.Group();
+[[-6, 0.5, -5, 2, 1, 2, 0xc4281c], [-6, 1.5, -5, 2, 1, 2, 0x0d69ac], [6.5, 0.5, -7, 4, 1, 2, 0xf5cd30], [7.5, 1.5, -7, 2, 1, 2, 0x4b974b]]
+  .forEach(([x, y, z, w, h, d, col]) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: col, roughness: 0.6 }));
+    m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; props.add(m);
+  });
+scene.add(props);
+
+const hemi = new THREE.HemisphereLight(0xdfeeff, 0x4a4450, 1.1);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+sun.position.set(5, 10, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -6, right: 6, top: 8, bottom: -2, near: 1, far: 30 });
+scene.add(sun);
+const rim = new THREE.PointLight(0xff40e2, 0, 14, 1.6);
+rim.position.set(0, 5.5, -3);
+scene.add(rim);
+const fill = new THREE.PointLight(0x46ffaa, 0, 10, 1.8);
+fill.position.set(-3.5, 2.5, 2.5);
+scene.add(fill);
+
+// ---------------------------------------------------------------- helpers
+const neon = (hex, k = 3) => new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), toneMapped: false });
+const std = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.6, ...extra });
+const Y = new THREE.Vector3(0, 1, 0);
+function rod(a, b, r, mat) {
+  const dir = new THREE.Vector3().subVectors(b, a);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, dir.length(), 8), mat);
+  m.position.copy(a).addScaledVector(dir, 0.5);
+  m.quaternion.setFromUnitVectors(Y, dir.normalize());
+  return m;
+}
+function starShape(r, inner = 0.45) {
+  const s = new THREE.Shape();
+  for (let i = 0; i < 10; i++) {
+    const rr = i % 2 ? r * inner : r, a = Math.PI / 2 + i * Math.PI / 5;
+    i ? s.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : s.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+  }
+  return s;
+}
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const shadowAll = (o) => o.traverse((m) => { if (m.isMesh && !m.material.isMeshBasicMaterial) m.castShadow = true; });
+
+function loadImage(src) {
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+}
+// Crop one template panel onto skin colour, the way Roblox fills gaps with body colour.
+function panel(img, [x, y, w, h]) {
+  const t = canvasTex(w * 2, h * 2, (g) => {
+    g.fillStyle = "#f4e2ee"; g.fillRect(0, 0, w * 2, h * 2);
+    g.imageSmoothingEnabled = true;
+    g.drawImage(img, x, y, w, h, 0, 0, w * 2, h * 2);
+  });
+  t.anisotropy = 8;
+  return t;
+}
+// BoxGeometry material order: +X, -X, +Y, -Y, +Z(front), -Z(back).
+// The rig faces +Z, so its own right side (R) is -X and its left side (L) is +X.
+function dressedBox(w, h, d, img, map) {
+  const mats = ["L", "R", "U", "D", "F", "B"].map((k) => new THREE.MeshStandardMaterial({ map: panel(img, map[k]), roughness: 0.82 }));
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mats);
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+
+// ---------------------------------------------------------------- character
+async function build() {
+  const [shirt, pants, faceImg] = await Promise.all(["shirt.png", "pants.png", "face.png"].map(loadImage));
+  const rigRoot = new THREE.Group();
+  const extras = new THREE.Group();
+
+  const torso = dressedBox(2, 2, 1, shirt, TORSO);
+  torso.position.y = 3;
+  rigRoot.add(torso);
+
+  const limb = (img, map, x, pivotY) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, pivotY, 0);
+    const m = dressedBox(1, 2, 1, img, map);
+    m.position.y = -1;
+    pivot.add(m);
+    rigRoot.add(pivot);
+    return pivot;
+  };
+  const armR = limb(shirt, LIMB_R, -1.5, 4);
+  const armL = limb(shirt, LIMB_L, 1.5, 4);
+  const legR = limb(pants, LIMB_R, -0.5, 2);
+  const legL = limb(pants, LIMB_L, 0.5, 2);
+
+  // Classic head: a rounded cylinder with the face decal wrapped on the front.
+  const head = new THREE.Group();
+  head.position.y = 4.6;
+  rigRoot.add(head);
+  const r = 0.62, hh = 0.6, fillet = 0.14, prof = [new THREE.Vector2(0, -hh)];
+  for (let i = 0; i <= 8; i++) { const a = -Math.PI / 2 + (i / 8) * Math.PI / 2; prof.push(new THREE.Vector2(r - fillet + Math.cos(a) * fillet, -hh + fillet + Math.sin(a) * fillet)); }
+  for (let i = 0; i <= 8; i++) { const a = (i / 8) * Math.PI / 2; prof.push(new THREE.Vector2(r - fillet + Math.cos(a) * fillet, hh - fillet + Math.sin(a) * fillet)); }
+  prof.push(new THREE.Vector2(0, hh));
+  const headMesh = new THREE.Mesh(new THREE.LatheGeometry(prof, 48), std(C.skin, { roughness: 0.7 }));
+  headMesh.castShadow = true;
+  head.add(headMesh);
+  const faceTex = new THREE.Texture(faceImg);
+  faceTex.colorSpace = THREE.SRGBColorSpace; faceTex.anisotropy = 8; faceTex.needsUpdate = true;
+  const arc = 2.1;
+  const face = new THREE.Mesh(
+    new THREE.CylinderGeometry(r + 0.004, r + 0.004, 1.1, 32, 1, true, -arc / 2, arc),
+    new THREE.MeshStandardMaterial({ map: faceTex, transparent: true, roughness: 0.7, depthWrite: false })
+  );
+  head.add(face);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.15, 16), std(0xd8bcd4));
+  neck.position.y = 4.02;
+  rigRoot.add(neck);
+
+  // ---- 3D extras (things classic clothing cannot carry) -----------------
+  const hx = new THREE.Group();
+  hx.position.copy(head.position);
+  extras.add(hx);
+
+  const hairMat = std(C.hair, { roughness: 0.45, emissive: 0x1a0830 });
+  const hairLight = std(0x3e5ed8, { roughness: 0.45, emissive: 0x1a0830 });
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.69, 40, 20, 0, Math.PI * 2, 0, Math.PI * 0.42), hairMat);
+  cap.position.y = 0.1; cap.scale.y = 0.9;
+  hx.add(cap);
+  const back = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.76, 0.85, 36, 1, true, Math.PI / 2 - 0.4, Math.PI + 0.8), hairMat);
+  back.material = hairMat.clone(); back.material.side = THREE.DoubleSide;
+  back.position.y = -0.12;
+  hx.add(back);
+  for (let a = Math.PI / 2 - 0.35; a <= Math.PI * 1.5 + 0.36; a += 0.24) {
+    const c = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.24, 6), hairMat);
+    c.rotation.x = Math.PI;
+    c.position.set(Math.sin(a) * 0.74, -0.64, Math.cos(a) * 0.74);
+    hx.add(c);
+  }
+  [-55, -37, -18, 0, 18, 37, 55].forEach((deg, i) => {
+    const a = THREE.MathUtils.degToRad(deg);
+    const len = i % 2 ? 0.26 : 0.34;
+    const c = new THREE.Mesh(new THREE.ConeGeometry(0.12, len, 6), i % 3 ? hairMat : hairLight);
+    c.rotation.x = Math.PI;
+    c.position.set(Math.sin(a) * 0.645, 0.38 - len / 2 + 0.14, Math.cos(a) * 0.645);
+    hx.add(c);
+  });
+  [-1, 1].forEach((s) => {
+    const a = THREE.MathUtils.degToRad(66) * s;
+    const lock = new THREE.Mesh(new THREE.ConeGeometry(0.13, 1.0, 6), hairMat);
+    lock.rotation.x = Math.PI;
+    lock.position.set(Math.sin(a) * 0.68, -0.1, Math.cos(a) * 0.68);
+    hx.add(lock);
+    const rimStrand = rod(V(Math.sin(a) * 0.76, 0.3, Math.cos(a) * 0.6), V(Math.sin(a) * 0.78, -0.55, Math.cos(a) * 0.55), 0.012, neon(0xc446e2, 1.6));
+    hx.add(rimStrand);
+  });
+
+  // cat ears poking out beside the cap
+  [-1, 1].forEach((s) => {
+    const ear = new THREE.Group();
+    ear.position.set(0.52 * s, 0.82, 0.02);
+    ear.rotation.z = -0.45 * s;
+    const outer = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.5, 3), std(0x463ebe, { roughness: 0.5 }));
+    outer.scale.z = 0.45;
+    const inner = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.32, 3), std(C.earIn, { emissive: 0x401030 }));
+    inner.scale.z = 0.3; inner.position.set(0, -0.04, 0.06);
+    ear.add(outer, inner);
+    hx.add(ear);
+  });
+
+  // Robin Hood cap
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.82, 0.08, 48), std(C.cloakLight, { roughness: 0.8 }));
+  brim.position.y = 0.5; brim.scale.z = 1.08;
+  const band = new THREE.Mesh(new THREE.TorusGeometry(0.73, 0.035, 8, 64), std(C.gold, { metalness: 0.8, roughness: 0.3 }));
+  band.rotation.x = Math.PI / 2; band.position.y = 0.56; band.scale.y = 1.08;
+  const brimEdge = band.clone(); brimEdge.scale.set(1.1, 1.18, 1); brimEdge.position.y = 0.5;
+  const crown = new THREE.Mesh(new THREE.ConeGeometry(0.7, 0.72, 48), std(0x3d8a63, { roughness: 0.8, emissive: 0x0c2a1c }));
+  crown.position.set(0, 0.82, -0.12); crown.rotation.x = -0.55; crown.scale.set(0.92, 1, 1.25);
+  hx.add(brim, band, brimEdge, crown);
+  const badge = new THREE.Group();
+  badge.position.set(-0.3, 0.66, 0.74); badge.rotation.y = -0.38;
+  const diamond = new THREE.Mesh(new THREE.OctahedronGeometry(0.15), std(C.gold, { metalness: 0.85, roughness: 0.25 }));
+  diamond.scale.set(0.8, 1, 0.25);
+  const star = new THREE.Mesh(new THREE.ShapeGeometry(starShape(0.07)), neon(0x46ffaa, 2.5));
+  star.position.z = 0.04;
+  badge.add(diamond, star);
+  hx.add(badge);
+  const fShape = new THREE.Shape();
+  fShape.moveTo(0, 0); fShape.quadraticCurveTo(0.16, 0.55, 0.03, 1.15); fShape.quadraticCurveTo(-0.12, 0.55, 0, 0);
+  const feather = new THREE.Mesh(new THREE.ShapeGeometry(fShape, 16), std(C.feather, { emissive: 0x7a0a58, side: THREE.DoubleSide, roughness: 0.5 }));
+  feather.position.set(0.5, 0.58, 0.2); feather.rotation.set(-0.45, 0, -0.75);
+  hx.add(feather);
+
+  // halo
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.66, 0.045, 12, 72), neon(0xff40e2, 1.7));
+  halo.rotation.x = Math.PI / 2 - 0.18;
+  halo.position.y = 1.65;
+  hx.add(halo);
+
+  // bow in the right hand (arm-local coordinates; hand is at y≈-1.9)
+  const bowG = new THREE.Group();
+  const z = 0.64;
+  const curve = new THREE.CatmullRomCurve3([V(0.16, 0.08, z), V(0.02, -0.12, z), V(-0.3, -0.75, z), V(-0.44, -1.85, z), V(-0.3, -2.95, z), V(0.02, -3.58, z), V(0.16, -3.78, z)]);
+  const limbMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 80, 0.05, 8), std(C.bow, { metalness: 0.3, roughness: 0.4 }));
+  bowG.add(limbMesh);
+  bowG.add(rod(V(0.16, 0.08, z), V(0.16, -3.78, z), 0.012, neon(0xff40e2, 3.2)));
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.42, 12), std(C.leather));
+  grip.position.set(-0.44, -1.85, z);
+  bowG.add(grip);
+  const glyphMat = neon(0x46ffaa, 2.6);
+  [0.14, 0.26, 0.74, 0.86].forEach((t) => {
+    const p = curve.getPointAt(t).add(V(0, 0, 0.06));
+    bowG.add(rod(V(p.x - 0.07, p.y - 0.07, p.z), p, 0.014, glyphMat), rod(V(p.x + 0.07, p.y - 0.07, p.z), p, 0.014, glyphMat), rod(p, V(p.x, p.y - 0.12, p.z), 0.012, glyphMat));
+  });
+  armR.add(bowG);
+
+  // arrow fletchings above the painted quiver (character's left shoulder, at the back)
+  const quiverTop = new THREE.Group();
+  [[0.62, -0.02], [0.74, 0.06], [0.5, 0.08]].forEach(([x, dz], i) => {
+    const a = V(x, 3.75, -0.55 + dz), b = V(x + 0.22, 4.55 + i * 0.05, -0.72 + dz);
+    quiverTop.add(rod(a, b, 0.018, std(0x3a2418)));
+    const fl = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.26), i === 1 ? neon(0x46ffaa, 1.8) : std(C.leaf, { side: THREE.DoubleSide }));
+    fl.material.side = THREE.DoubleSide;
+    fl.position.copy(b).lerp(a, 0.12);
+    fl.lookAt(camera.position.clone().setY(fl.position.y));
+    fl.rotation.z = 0.25;
+    quiverTop.add(fl);
+    const fl2 = fl.clone(); fl2.rotation.y += Math.PI / 2; quiverTop.add(fl2);
+  });
+  extras.add(quiverTop);
+
+  rigRoot.add(extras);
+  shadowAll(rigRoot);
+  scene.add(rigRoot);
+  return { rigRoot, extras, bowG, halo, armR, armL, legR, legL };
+}
+
+// ---------------------------------------------------------------- UI state
+const state = { spin: !reduceMotion, walk: false, extras: true, neon: false, camGoal: null };
+const $ = (id) => document.getElementById(id);
+function press(btn, on) { btn.setAttribute("aria-pressed", on ? "true" : "false"); }
+press($("btnSpin"), state.spin);
+
+function applyScene() {
+  scene.background = state.neon ? skyNeon : skyDay;
+  scene.fog = state.neon ? new THREE.Fog(0x14061c, 14, 42) : new THREE.Fog(0xcfe3f4, 30, 90);
+  floorMat.map = state.neon ? floorNeon : floorDay; floorMat.needsUpdate = true;
+  hemi.intensity = state.neon ? 0.35 : 1.1;
+  hemi.color.set(state.neon ? 0x8a6cff : 0xdfeeff);
+  sun.intensity = state.neon ? 0.9 : 2.2;
+  sun.color.set(state.neon ? 0xc8b8ff : 0xffffff);
+  rim.intensity = state.neon ? 9 : 0;
+  fill.intensity = state.neon ? 5 : 0;
+  props.visible = !state.neon;
+  bloom.strength = state.neon ? 0.75 : 0.3;
+}
+applyScene();
+
+let rig;
+build().then((r) => { rig = r; $("status").hidden = true; }).catch((e) => {
+  $("status").textContent = "Couldn't load the textures - reload the page to try again.";
+  console.error(e);
+});
+
+function goView(back) {
+  state.spin = false; press($("btnSpin"), false);
+  state.camGoal = { theta: back ? Math.PI : 0, phi: Math.PI / 2 - 0.05 };
+  $("hint").textContent = back ? "Back view · quiver + cloak hem" : "Front view · corset, brooches, bow";
+}
+$("btnFront").onclick = () => goView(false);
+$("btnBack").onclick = () => goView(true);
+$("btnSpin").onclick = () => { state.spin = !state.spin; press($("btnSpin"), state.spin); };
+$("btnWalk").onclick = () => { state.walk = !state.walk; press($("btnWalk"), state.walk); };
+$("btnExtras").onclick = () => {
+  state.extras = !state.extras; press($("btnExtras"), state.extras);
+  if (rig) { rig.extras.visible = state.extras; rig.bowG.visible = state.extras; }
+  $("hint").textContent = state.extras ? "Showing hair, ears, hat, halo + bow (3D accessories)" : "Clothing only · exactly what the uploaded Shirt + Pants give you";
+};
+$("btnNeon").onclick = () => { state.neon = !state.neon; press($("btnNeon"), state.neon); applyScene(); };
+controls.addEventListener("start", () => { state.camGoal = null; });
+
+// ---------------------------------------------------------------- loop
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  composer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.fov = w < h ? 44 : 32;
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+resize();
+
+const clock = new THREE.Clock();
+let walkT = 0;
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  if (rig) {
+    if (state.spin) rig.rigRoot.rotation.y += dt * 0.5;
+    else if (state.camGoal) rig.rigRoot.rotation.y *= 0.85;
+    const target = state.walk ? 1 : 0;
+    walkT += (target - walkT) * Math.min(1, dt * 6);
+    const swing = Math.sin(t * 7) * 0.75 * walkT;
+    rig.armR.rotation.x = swing; rig.armL.rotation.x = -swing;
+    rig.legR.rotation.x = -swing; rig.legL.rotation.x = swing;
+    rig.rigRoot.position.y = Math.abs(Math.sin(t * 7)) * 0.08 * walkT;
+    if (!reduceMotion) rig.halo.position.y = 1.65 + Math.sin(t * 2) * 0.04;
+  }
+  if (state.camGoal) {
+    // orbit around the rig instead of cutting through it
+    const off = camera.position.clone().sub(controls.target);
+    const sph = new THREE.Spherical().setFromVector3(off);
+    let dTheta = state.camGoal.theta - sph.theta;
+    dTheta = Math.atan2(Math.sin(dTheta), Math.cos(dTheta));
+    const k = Math.min(1, dt * 5);
+    sph.theta += dTheta * k;
+    sph.phi += (state.camGoal.phi - sph.phi) * k;
+    camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(sph));
+    if (Math.abs(dTheta) < 0.005) state.camGoal = null;
+  }
+  controls.update();
+  composer.render();
+});
+</script>
